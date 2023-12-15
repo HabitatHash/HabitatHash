@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 import "hardhat/console.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "./InsuranceVote.sol";
 import "./SimpleContract.sol";
+import "./RentalContract.sol";
 
 contract HabitatHub {
     struct ObjectInformation {
@@ -18,8 +20,8 @@ contract HabitatHub {
         bool isRented; // is apartment rented out
         address contractAddress; // address to the current active contract
     }
-    struct RentalContract {
-        SimpleContract rentalContract; //TODO set real contract
+    struct RentalContractObject {
+        RentalContract rentalContract;
         address insuranceContract;
     }
     struct InsuranceContract {
@@ -27,12 +29,16 @@ contract HabitatHub {
         bool hasClaimed;
     }
 
+    //Oracle to get USD to ETH
+    AggregatorV3Interface internal priceFeed =
+        AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
+
     //Array to store all current object ids
     uint256[] public objectIds;
 
     //Mappings to store all rental objects and contracts
     mapping(uint256 => RentalObject) public rentalObjects;
-    mapping(address => RentalContract) public rentalContracts;
+    mapping(address => RentalContractObject) public rentalContracts;
 
     //Mappings to keep track of paid and claimed insurance
     mapping(address => InsuranceContract) public insuranceContracts;
@@ -45,6 +51,17 @@ contract HabitatHub {
     event Rent(address indexed _renter, uint256 _objectId);
     event EndRent(address indexed _renter, uint256 _objectId);
     event InsuranceClaimed(address indexed _user, uint256 value);
+
+    function getUsdToEth(uint value) public view returns (uint) {
+        uint ethToUsd = getEthToUsd();
+        uint usdToEth = (1 / ethToUsd);
+        return usdToEth * value;
+    }
+
+    function getEthToUsd() private view returns (uint) {
+        (, int price, , , ) = priceFeed.latestRoundData();
+        return uint(price / 10 ** 8);
+    }
 
     // The contract should be able to recieve payments to keep as an insurance pool
     function deposit() external payable {
@@ -138,7 +155,7 @@ contract HabitatHub {
     }
 
     //Start the renting process, creates a housingRentalContract
-    function rentObject(uint256 objectId) public {
+    function rentObject(uint256 objectId, uint256 monthsToRent) public {
         require(idExists(objectId), "Object doesnt exist");
         require(
             rentalObjects[objectId].isRented == false,
@@ -147,14 +164,20 @@ contract HabitatHub {
 
         rentalObjects[objectId].isRented = true;
 
-        //TODO create real contract
-        SimpleContract testContract = new SimpleContract(
-            rentalObjects[objectId].owner
+        uint rentEth = getUsdToEth(rentalObjects[objectId].description.rent);
+
+        RentalContract rentalContact = new RentalContract(
+            this,
+            rentalObjects[objectId].owner,
+            msg.sender,
+            objectId,
+            monthsToRent,
+            rentEth
         );
 
-        rentalObjects[objectId].contractAddress = address(testContract);
-        rentalContracts[address(testContract)] = RentalContract(
-            testContract,
+        rentalObjects[objectId].contractAddress = address(rentalContact);
+        rentalContracts[address(rentalContact)] = RentalContractObject(
+            rentalContact,
             address(0)
         );
 
@@ -168,12 +191,11 @@ contract HabitatHub {
             "Object is not rented"
         );
 
-        //TODO Get real contract and check balance
-        SimpleContract testContract = rentalContracts[
+        RentalContract rentalContract = rentalContracts[
             rentalObjects[objectId].contractAddress
         ].rentalContract;
-        uint256 data = testContract.get();
-        require(data == 0, "Contract is not fulfilled");
+
+        require(rentalContract.checkFulfilled(), "Contract is not fulfilled");
 
         rentalObjects[objectId].isRented = false;
         rentalObjects[objectId].contractAddress = address(0);
@@ -187,15 +209,14 @@ contract HabitatHub {
         string memory description,
         uint256 value
     ) public {
-        //Todo set real contract
-        SimpleContract rentalContract = rentalContracts[rentalContractAddress]
+        RentalContract rentalContract = rentalContracts[rentalContractAddress]
             .rentalContract;
         address insuranceContractAddress = rentalContracts[
             rentalContractAddress
         ].insuranceContract;
 
         require(
-            rentalContract.owner() == msg.sender,
+            rentalContract.landlord() == msg.sender,
             "You can only apply for insurance on your own contract"
         );
 
