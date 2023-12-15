@@ -2,33 +2,36 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 
-describe("HousingRentalContract", function () {
-    let HousingRentalContract;
+describe("RentalContract", function () {
+    let RentalContract;
     let rentalContract;
-    let landlord, renter, otherAccount;
+    let landlord, renter;
 
     // Utility function for deploying the contract
     async function deployRentalContractFixture() {
-        [landlord, renter, otherAccount] = await ethers.getSigners();
+        [landlord, renter] = await ethers.getSigners();
 
-        console.log(renter.address);
-        console.log(landlord.address);
+        HabitatHubContract = await ethers.getContractFactory("HabitatHub");
+        HabitatHub = await HabitatHubContract.deploy();
 
-        HousingRentalContract = await ethers.getContractFactory("HousingRentalContract");
-        rentalContract = await HousingRentalContract.deploy(
+        txResponse = await HabitatHub.addObject('Beckombergavägen 15', 1000, 3, 56, true);
+
+        RentalContract = await ethers.getContractFactory("RentalContract");
+        rentalContract = await RentalContract.deploy(
+            HabitatHub.target,
+            landlord.address,
             renter.address,
-            "123 Main St",
-            Math.floor(Date.now() / 1000),
-            Math.floor(Date.now() / 1000) + 86400 * 365, // 1 year
+            100,
+            12, //Months
             ethers.parseEther("1.0"), // 1 Ether as monthly rent
         );
 
-        // Ensure that the contract is deployed and has a valid address
-        //if (!rentalContract.address) {
+        //Ensure that the contract is deployed and has a valid address
+        // if (!rentalContract.address) {
         //    throw new Error("Contract deployment failed");
-        //}
+        // }
         
-        return { landlord, renter, otherAccount, rentalContract };
+        return { landlord, renter, rentalContract };
     }
 
     describe("Deployment", function () {
@@ -58,17 +61,10 @@ describe("HousingRentalContract", function () {
             // Check final balance of the contract
             const finalBalanceRenter = await ethers.provider.getBalance(renterAddress);
             const finalBalanceLender = await ethers.provider.getBalance(lenderAddress);
-            console.log(initialBalanceRenter);
-            console.log(initialBalanceLender);
-            console.log(finalBalanceRenter);
-            console.log(finalBalanceLender);
 
             const rentAmountLender = finalBalanceLender - initialBalanceLender;
             const rentAmountRenter = initialBalanceRenter - finalBalanceRenter;
-            console.log(rentAmountLender);
-            console.log(rentAmountRenter);
 
-        
             // Assert that the contract's balance increased by the rent amount
             expect(rentAmountLender).to.equal(ethers.parseEther("1.0"));
         });

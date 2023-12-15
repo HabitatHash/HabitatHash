@@ -58,7 +58,7 @@ contract HabitatHub {
         return usdToEth * value;
     }
 
-    function getEthToUsd() private view returns (uint) {
+    function getEthToUsd() public view returns (uint) {
         (, int price, , , ) = priceFeed.latestRoundData();
         return uint(price / 10 ** 8);
     }
