@@ -32,6 +32,13 @@ contract HabitatRent {
         monthlyRent = _monthlyRent;
     }
 
+    event rentPaid(
+        address indexed _renter,
+        uint256 objectId,
+        uint256 monthlyRent
+    );
+    event contractTerminated(address indexed terminator, uint256 objectId);
+
     // Function to terminate the contract
     function terminateContract() public {
         require(rentsPaid >= monthsToRent, "All rents are not paid");
@@ -42,6 +49,7 @@ contract HabitatRent {
 
         isTerminated = true;
         habitatHub.endRentObject(objectId);
+        emit contractTerminated(msg.sender, objectId);
     }
 
     //Used by renter to pay rent to landlord
@@ -53,6 +61,7 @@ contract HabitatRent {
 
         payable(landlord).transfer(msg.value);
         rentsPaid += 1;
+        emit rentPaid(msg.sender, objectId, msg.value);
     }
 
     //Checks if all rents are paid
