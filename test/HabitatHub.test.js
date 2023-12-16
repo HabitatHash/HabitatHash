@@ -1,5 +1,4 @@
 const { expect } = require('chai');
-const { ethers } = require('hardhat');
 const {
   loadFixture,
 } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
@@ -31,7 +30,6 @@ describe('HabitatHub', async function () {
 
     expect(Number(latestPrice)).to.be.a('number');
   });
-
   it('Should be able to get usdToEth', async function () {
     const { contract } = await loadFixture(deployContractFixture);
 
@@ -55,7 +53,6 @@ describe('HabitatHub', async function () {
 
     expect(rentalObjects.length).to.equal(2);
   });
-
   it('Should emit AddObject events', async function () {
     const { contract, addr1, addr2 } = await loadFixture(deployContractFixture);
 
@@ -65,7 +62,6 @@ describe('HabitatHub', async function () {
         .addObject('Beckombergavägen 15', 1000, 3, 56, true)
     ).to.emit(contract, 'AddObject');
   });
-
   it('Should fail to add same object twice', async function () {
     const { contract, addr1 } = await loadFixture(deployContractFixture);
 
@@ -99,7 +95,6 @@ describe('HabitatHub', async function () {
 
     expect(objectIds.length).to.equal(1);
   });
-
   it('Should not be able to remove others object', async function () {
     const { contract, addr1, addr2 } = await loadFixture(deployContractFixture);
 
@@ -157,7 +152,6 @@ describe('HabitatHub', async function () {
       contract.connect(addr3).rentObject(objectId, monthsToRent)
     ).to.be.revertedWith('Object is already rented');
   });
-
   it('Should not be able to rent object that doesnt exist', async function () {
     const { contract, addr1 } = await loadFixture(deployContractFixture);
 
@@ -186,7 +180,6 @@ describe('HabitatHub', async function () {
       contract.connect(addr1).endRentObject(objectId)
     ).to.be.revertedWith('Object is not rented');
   });
-
   it('Should not be able to end rent when rent contract is not fulfilled', async function () {
     const { contract, addr1, addr2 } = await loadFixture(deployContractFixture);
 
@@ -513,20 +506,7 @@ describe('HabitatHub', async function () {
       contract.connect(addr1).claimInsurance(rentalContractAddress)
     ).to.be.revertedWith('This insurance has already been claimed');
   });
-  /*
-  //Test hash function
-  it('Should be able to hash address', async function () {
-    const { contract } = await loadFixture(deployContractFixture);
-    const id = await contract.addressToHashId('testString');
-    expect(Number(id)).to.be.a('Number');
-  });
-  //Test Id exists
-  it('Id should not exist', async function () {
-    const { contract } = await loadFixture(deployContractFixture);
-    const exists = await contract.idExists(123);
-    expect(exists).to.equal(false);
-  });
-  */
+
   //Test deposit
   it('Should be able to deposit to contract', async function () {
     const { contract, addr1 } = await loadFixture(deployContractFixture);
