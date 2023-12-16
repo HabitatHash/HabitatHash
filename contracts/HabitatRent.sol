@@ -2,7 +2,7 @@
 pragma solidity ^0.8.9;
 import "./HabitatHub.sol";
 
-contract RentalContract {
+contract HabitatRent {
     //Hub contract
     HabitatHub habitatHub;
 

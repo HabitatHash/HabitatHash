@@ -2,9 +2,8 @@
 pragma solidity ^0.8.9;
 import "hardhat/console.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "./InsuranceVote.sol";
-import "./SimpleContract.sol";
-import "./RentalContract.sol";
+import "./HabitatVote.sol";
+import "./HabitatRent.sol";
 
 contract HabitatHub {
     struct ObjectInformation {
@@ -20,12 +19,12 @@ contract HabitatHub {
         bool isRented; // is apartment rented out
         address contractAddress; // address to the current active contract
     }
-    struct RentalContractObject {
-        RentalContract rentalContract;
+    struct RentalContract {
+        HabitatRent rentalContract;
         address insuranceContract;
     }
     struct InsuranceContract {
-        InsuranceVote insuranceContract;
+        HabitatVote insuranceContract;
         bool hasClaimed;
     }
 
@@ -38,7 +37,7 @@ contract HabitatHub {
 
     //Mappings to store all rental objects and contracts
     mapping(uint256 => RentalObject) public rentalObjects;
-    mapping(address => RentalContractObject) public rentalContracts;
+    mapping(address => RentalContract) public rentalContracts;
 
     //Mappings to keep track of paid and claimed insurance
     mapping(address => InsuranceContract) public insuranceContracts;
@@ -166,7 +165,7 @@ contract HabitatHub {
 
         uint rentEth = getUsdToEth(rentalObjects[objectId].description.rent);
 
-        RentalContract rentalContact = new RentalContract(
+        HabitatRent rentalContact = new HabitatRent(
             this,
             rentalObjects[objectId].owner,
             msg.sender,
@@ -176,7 +175,7 @@ contract HabitatHub {
         );
 
         rentalObjects[objectId].contractAddress = address(rentalContact);
-        rentalContracts[address(rentalContact)] = RentalContractObject(
+        rentalContracts[address(rentalContact)] = RentalContract(
             rentalContact,
             address(0)
         );
@@ -191,7 +190,7 @@ contract HabitatHub {
             "Object is not rented"
         );
 
-        RentalContract rentalContract = rentalContracts[
+        HabitatRent rentalContract = rentalContracts[
             rentalObjects[objectId].contractAddress
         ].rentalContract;
 
@@ -209,7 +208,7 @@ contract HabitatHub {
         string memory description,
         uint256 value
     ) public {
-        RentalContract rentalContract = rentalContracts[rentalContractAddress]
+        HabitatRent rentalContract = rentalContracts[rentalContractAddress]
             .rentalContract;
         address insuranceContractAddress = rentalContracts[
             rentalContractAddress
@@ -225,7 +224,7 @@ contract HabitatHub {
             "You can only create one insurance claim per rental contract"
         );
 
-        InsuranceVote voteContract = new InsuranceVote(
+        HabitatVote insuranceContract = new HabitatVote(
             msg.sender,
             rentalContractAddress,
             description,
@@ -233,10 +232,10 @@ contract HabitatHub {
         );
 
         rentalContracts[rentalContractAddress].insuranceContract = address(
-            voteContract
+            insuranceContract
         );
-        insuranceContracts[address(voteContract)] = InsuranceContract(
-            voteContract,
+        insuranceContracts[address(insuranceContract)] = InsuranceContract(
+            insuranceContract,
             false
         );
     }
@@ -246,7 +245,7 @@ contract HabitatHub {
         address insuranceContractAddress = rentalContracts[
             rentalContractAddress
         ].insuranceContract;
-        InsuranceVote insuranceContract = insuranceContracts[
+        HabitatVote insuranceContract = insuranceContracts[
             insuranceContractAddress
         ].insuranceContract;
 

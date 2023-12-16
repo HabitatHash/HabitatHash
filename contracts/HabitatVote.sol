@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-contract InsuranceVote {
+contract HabitatVote {
     struct Voter {
         address voter; // The person who voted
         bool voted; // if true, that person already voted
