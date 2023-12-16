@@ -5,13 +5,14 @@ const {
 
 describe('HabitatHub', async function () {
   async function deployContractFixture() {
-    const [addr1, addr2] = await ethers.getSigners();
+    const [addr1, addr2, addr3] = await ethers.getSigners();
 
     const contract = await ethers.deployContract('HabitatHub');
 
-    return { contract, addr1, addr2 };
+    return { contract, addr1, addr2, addr3 };
   }
 
+  //Test correct deployment
   it('Deployment should assign empty objectIds', async function () {
     const { contract } = await loadFixture(deployContractFixture);
 
@@ -20,16 +21,24 @@ describe('HabitatHub', async function () {
     expect(objectIds.length).to.equal(0);
   });
 
+  //Test usd to eth oracle
   it('Should return the latest price', async function () {
     const { contract, addr1 } = await loadFixture(deployContractFixture);
 
     const latestPrice = await contract.connect(addr1).getEthToUsd();
-    console.log('Latest Price:', latestPrice.toString());
 
-    // Since the price is returned as a BigNumber, we check if it's a BigNumber instead of a 'number'
     expect(Number(latestPrice)).to.be.a('number');
   });
 
+  it('Should be able to get usdToEth', async function () {
+    const { contract } = await loadFixture(deployContractFixture);
+
+    const hundredUsdInWei = Number(await contract.getUsdToWei(1));
+
+    expect(hundredUsdInWei).to.be.a('number');
+  });
+
+  // Test add object
   it('Should be able to add object', async function () {
     const { contract, addr1 } = await loadFixture(deployContractFixture);
 
@@ -66,6 +75,7 @@ describe('HabitatHub', async function () {
     ).to.be.revertedWith('You cannot add multiple of same rental objects');
   });
 
+  //Test remove object
   it('Should be able to remove object', async function () {
     const { contract, addr1 } = await loadFixture(deployContractFixture);
 
@@ -96,11 +106,200 @@ describe('HabitatHub', async function () {
     ).to.be.revertedWith('You can only remove your own objects');
   });
 
-  it('Should be able to get usdToEth', async function () {
-    const { contract } = await loadFixture(deployContractFixture);
+  //Test rent
+  it('Should be able to rent object, and should not be able to rent already rented object', async function () {
+    const { contract, addr1, addr2, addr3 } = await loadFixture(
+      deployContractFixture
+    );
 
-    const hundredUsdInWei = Number(await contract.getUsdToWei(1));
+    await contract
+      .connect(addr1)
+      .addObject('Beckombergavägen 15', 1000, 3, 56, true);
 
-    expect(hundredUsdInWei).to.be.a('number');
+    const objectIds = await contract.getAllObjectIds();
+
+    const objectId = objectIds[0];
+    const monthsToRent = 1;
+
+    await contract.connect(addr2).rentObject(objectId, monthsToRent);
+
+    const rentalObject = await contract.getRentalObject(objectId);
+
+    expect(rentalObject.isRented).to.equal(true);
+
+    await expect(
+      contract.connect(addr3).rentObject(objectId, monthsToRent)
+    ).to.be.revertedWith('Object is already rented');
+  });
+
+  it('Should not be able to rent object that doesnt exist', async function () {
+    const { contract, addr1 } = await loadFixture(deployContractFixture);
+
+    const objectId = 123;
+    const monthsToRent = 1;
+
+    await expect(
+      contract.connect(addr1).rentObject(objectId, monthsToRent)
+    ).to.be.revertedWith('Object doesnt exist');
+  });
+
+  //Test end rent
+  it('Should not be able to end rent when object doesnt exist or is not rented', async function () {
+    const { contract, addr1 } = await loadFixture(deployContractFixture);
+
+    await contract
+      .connect(addr1)
+      .addObject('Beckombergavägen 15', 1000, 3, 56, true);
+
+    const objectIds = await contract.getAllObjectIds();
+
+    const objectId = objectIds[0];
+    const monthsToRent = 1;
+
+    await expect(
+      contract.connect(addr1).endRentObject(objectId)
+    ).to.be.revertedWith('Object is not rented');
+  });
+
+  it('Should not be able to end rent when rent contract is not fulfilled', async function () {
+    const { contract, addr1, addr2 } = await loadFixture(deployContractFixture);
+
+    await contract
+      .connect(addr1)
+      .addObject('Beckombergavägen 15', 1000, 3, 56, true);
+
+    const objectIds = await contract.getAllObjectIds();
+
+    const objectId = objectIds[0];
+    const monthsToRent = 1;
+
+    await contract.connect(addr2).rentObject(objectId, monthsToRent);
+
+    await expect(
+      contract.connect(addr2).endRentObject(objectId)
+    ).to.be.revertedWith('Contract is not fulfilled');
+  });
+  it('Should be able to end rent when rent contract is fulfilled', async function () {
+    const { contract, addr1, addr2 } = await loadFixture(deployContractFixture);
+
+    await contract
+      .connect(addr1)
+      .addObject('Beckombergavägen 15', 1000, 3, 56, true);
+
+    const objectIds = await contract.getAllObjectIds();
+
+    const objectId = objectIds[0];
+    const monthsToRent = 0;
+
+    await contract.connect(addr2).rentObject(objectId, monthsToRent);
+    await contract.connect(addr2).endRentObject(objectId);
+
+    const rentalObject = await contract.getRentalObject(objectId);
+
+    expect(rentalObject.isRented).to.equal(false);
+  });
+
+  //Test apply insurance
+  it('Should be able to apply for insurance', async function () {
+    const { contract, addr1, addr2 } = await loadFixture(deployContractFixture);
+
+    await contract
+      .connect(addr1)
+      .addObject('Beckombergavägen 15', 1000, 3, 56, true);
+
+    const objectIds = await contract.getAllObjectIds();
+
+    const objectId = objectIds[0];
+    const monthsToRent = 0;
+
+    await contract.connect(addr2).rentObject(objectId, monthsToRent);
+
+    const rentalObject = await contract.getRentalObject(objectId);
+    const rentalContractAddress = rentalObject.contractAddress;
+
+    await expect(
+      contract
+        .connect(addr1)
+        .applyForInsurance(rentalContractAddress, 'test', 1)
+    ).to.emit(contract, 'InsuranceApplied');
+  });
+  it('Should not be able to apply for insurance twice on same contract', async function () {
+    const { contract, addr1, addr2 } = await loadFixture(deployContractFixture);
+
+    await contract
+      .connect(addr1)
+      .addObject('Beckombergavägen 15', 1000, 3, 56, true);
+
+    const objectIds = await contract.getAllObjectIds();
+
+    const objectId = objectIds[0];
+    const monthsToRent = 0;
+
+    await contract.connect(addr2).rentObject(objectId, monthsToRent);
+
+    const rentalObject = await contract.getRentalObject(objectId);
+    const rentalContractAddress = rentalObject.contractAddress;
+
+    await contract
+      .connect(addr1)
+      .applyForInsurance(rentalContractAddress, 'test', 1);
+
+    await expect(
+      contract
+        .connect(addr1)
+        .applyForInsurance(rentalContractAddress, 'test', 1)
+    ).to.be.revertedWith(
+      'You can only create one insurance claim per rental contract'
+    );
+  });
+  it('Should not be able to apply for insurance on others contracts', async function () {
+    const { contract, addr1, addr2 } = await loadFixture(deployContractFixture);
+
+    await contract
+      .connect(addr1)
+      .addObject('Beckombergavägen 15', 1000, 3, 56, true);
+
+    const objectIds = await contract.getAllObjectIds();
+
+    const objectId = objectIds[0];
+    const monthsToRent = 0;
+
+    await contract.connect(addr2).rentObject(objectId, monthsToRent);
+
+    const rentalObject = await contract.getRentalObject(objectId);
+    const rentalContractAddress = rentalObject.contractAddress;
+
+    await expect(
+      contract
+        .connect(addr2)
+        .applyForInsurance(rentalContractAddress, 'test', 1)
+    ).to.to.be.revertedWith(
+      'You can only apply for insurance on your own contract'
+    );
+  });
+
+  //Test claim insurance
+  it('Should not be able to claim insurance on others contracts', async function () {
+    const { contract, addr1, addr2 } = await loadFixture(deployContractFixture);
+
+    await contract
+      .connect(addr1)
+      .addObject('Beckombergavägen 15', 1000, 3, 56, true);
+
+    const objectIds = await contract.getAllObjectIds();
+
+    const objectId = objectIds[0];
+    const monthsToRent = 0;
+
+    await contract.connect(addr2).rentObject(objectId, monthsToRent);
+
+    const rentalObject = await contract.getRentalObject(objectId);
+    const rentalContractAddress = rentalObject.contractAddress;
+
+    await expect(
+      contract
+        .connect(addr1)
+        .applyForInsurance(rentalContractAddress, 'test', 1)
+    ).to.emit(contract, 'InsuranceApplied');
   });
 });
