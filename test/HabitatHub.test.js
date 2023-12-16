@@ -20,6 +20,16 @@ describe('HabitatHub', async function () {
     expect(objectIds.length).to.equal(0);
   });
 
+  it("Should return the latest price", async function () {
+    const { contract, addr1 } = await loadFixture(deployContractFixture);
+
+    const latestPrice = await contract.connect(addr1).getEthToUsd();
+    console.log("Latest Price:", latestPrice.toString());
+
+    // Since the price is returned as a BigNumber, we check if it's a BigNumber instead of a 'number'
+    expect(Number(latestPrice)).to.be.a('number');
+  });
+
   it('Should be able to add object', async function () {
     const { contract, addr1 } = await loadFixture(deployContractFixture);
 

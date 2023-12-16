@@ -5,12 +5,12 @@ const {
 
 const zeroAddress = '0x0000000000000000000000000000000000000000';
 
-describe('InsuranceVote', async function () {
+describe('HabitatVote', async function () {
   async function deployContractFixture() {
     const [addr1, addr2, addr3, addr4, addr5, addr6, addr7] =
       await ethers.getSigners();
 
-    const contract = await ethers.deployContract('InsuranceVote', [
+    const contract = await ethers.deployContract('HabitatVote', [
       addr1,
       zeroAddress,
       'description',
