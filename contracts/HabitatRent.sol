@@ -39,6 +39,15 @@ contract HabitatRent {
     );
     event contractTerminated(address indexed terminator, uint256 objectId);
 
+    // Helper functions
+    function getMonthsToRent() public view returns (uint) {
+        return monthsToRent;
+    }
+
+    function getMontlyRent() public view returns (uint256) {
+        return monthlyRent;
+    }
+
     // Function to terminate the contract
     function terminateContract() public {
         require(rentsPaid >= monthsToRent, "All rents are not paid");
@@ -59,7 +68,10 @@ contract HabitatRent {
         require(msg.sender == renter, "Only the renter can pay the rent");
         require(msg.value == monthlyRent, "Incorrect rent amount");
 
-        payable(landlord).transfer(msg.value);
+        uint256 insuranceFee = (msg.value* 2) / 100; // 2% insurance fee
+        habitatHub.deposit{value: insuranceFee}();
+
+        payable(landlord).transfer(msg.value-insuranceFee);
         rentsPaid += 1;
         emit rentPaid(msg.sender, objectId, msg.value);
     }
