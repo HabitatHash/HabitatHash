@@ -57,7 +57,7 @@ contract HabitatHub {
         uint256 _value
     );
 
-    //Get the active contract from contract address
+    //Get the Rental Contract object from contract address
     function getRentalContract(
         address contractAddress
     ) public view returns (RentalContract memory) {
