@@ -57,15 +57,17 @@ contract HabitatHub {
         uint256 _value
     );
 
-    function getUsdToEth(uint value) public view returns (uint) {
+    //Input USD to get rent in Wei.
+    function getUsdToWei(uint value) public view returns (uint) {
         uint ethToUsd = getEthToUsd();
-        uint usdToEth = (1 / ethToUsd);
-        return usdToEth * value;
+        //ethToUsd has 8 decimals, adding 26 (18+8) decimals to value to get Wei.
+        return (value * (10 ** 26)) / ethToUsd;
     }
 
+    //Gets current price of 1 eth in USD (Contains 8 decimals)
     function getEthToUsd() public view returns (uint) {
         (, int price, , , ) = priceFeed.latestRoundData();
-        return uint(price / 10 ** 8);
+        return uint(price);
     }
 
     // The contract should be able to recieve payments to keep as an insurance pool
@@ -169,7 +171,7 @@ contract HabitatHub {
 
         rentalObjects[objectId].isRented = true;
 
-        uint rentEth = getUsdToEth(rentalObjects[objectId].description.rent);
+        uint rentInWei = getUsdToWei(rentalObjects[objectId].description.rent);
 
         HabitatRent rentalContact = new HabitatRent(
             this,
@@ -177,7 +179,7 @@ contract HabitatHub {
             msg.sender,
             objectId,
             monthsToRent,
-            rentEth
+            rentInWei
         );
 
         rentalObjects[objectId].contractAddress = address(rentalContact);

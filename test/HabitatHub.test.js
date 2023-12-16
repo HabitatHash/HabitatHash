@@ -20,11 +20,11 @@ describe('HabitatHub', async function () {
     expect(objectIds.length).to.equal(0);
   });
 
-  it("Should return the latest price", async function () {
+  it('Should return the latest price', async function () {
     const { contract, addr1 } = await loadFixture(deployContractFixture);
 
     const latestPrice = await contract.connect(addr1).getEthToUsd();
-    console.log("Latest Price:", latestPrice.toString());
+    console.log('Latest Price:', latestPrice.toString());
 
     // Since the price is returned as a BigNumber, we check if it's a BigNumber instead of a 'number'
     expect(Number(latestPrice)).to.be.a('number');
@@ -94,5 +94,13 @@ describe('HabitatHub', async function () {
     await expect(
       contract.connect(addr2).removeObject(objectIds[0])
     ).to.be.revertedWith('You can only remove your own objects');
+  });
+
+  it('Should be able to get usdToEth', async function () {
+    const { contract } = await loadFixture(deployContractFixture);
+
+    const hundredUsdInWei = Number(await contract.getUsdToWei(1));
+
+    expect(hundredUsdInWei).to.be.a('number');
   });
 });
