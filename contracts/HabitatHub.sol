@@ -57,15 +57,17 @@ contract HabitatHub {
         uint256 _value
     );
 
-    function getUsdToEth(uint value) public view returns (uint) {
+    //Input USD to get rent in Wei.
+    function getUsdToWei(uint value) public view returns (uint) {
         uint ethToUsd = getEthToUsd();
-        uint usdToEth = (1 / ethToUsd);
-        return usdToEth * value;
+        //ethToUsd has 8 decimals, adding 26 (18+8) decimals to value to get Wei.
+        return (value * (10 ** 26)) / ethToUsd;
     }
 
+    //Gets current price of 1 eth in USD (Contains 8 decimals)
     function getEthToUsd() public view returns (uint) {
         (, int price, , , ) = priceFeed.latestRoundData();
-        return uint(price / 10 ** 8);
+        return uint(price);
     }
 
     // The contract should be able to recieve payments to keep as an insurance pool
@@ -142,21 +144,15 @@ contract HabitatHub {
             "You can only remove your own objects"
         );
 
-        removeId(objectId);
-
-        emit RemoveObject(msg.sender, objectId);
-    }
-
-    //Removes an Id from the objectIds
-    function removeId(uint256 id) private {
         //Replaces the element to be removed with the last element, and then removes the last element
         for (uint256 i = 0; i < objectIds.length; i++) {
-            if (objectIds[i] == id) {
+            if (objectIds[i] == objectId) {
                 objectIds[i] = objectIds[objectIds.length - 1];
                 objectIds.pop();
-                return;
             }
         }
+
+        emit RemoveObject(msg.sender, objectId);
     }
 
     //Start the renting process, creates a housingRentalContract
@@ -169,7 +165,7 @@ contract HabitatHub {
 
         rentalObjects[objectId].isRented = true;
 
-        uint rentEth = getUsdToEth(rentalObjects[objectId].description.rent);
+        uint rentInWei = getUsdToWei(rentalObjects[objectId].description.rent);
 
         HabitatRent rentalContact = new HabitatRent(
             this,
@@ -177,7 +173,7 @@ contract HabitatHub {
             msg.sender,
             objectId,
             monthsToRent,
-            rentEth
+            rentInWei
         );
 
         rentalObjects[objectId].contractAddress = address(rentalContact);
@@ -257,6 +253,12 @@ contract HabitatHub {
         address insuranceContractAddress = rentalContracts[
             rentalContractAddress
         ].insuranceContract;
+
+        require(
+            insuranceContractAddress != address(0),
+            "No insurance claim on this contract"
+        );
+
         HabitatVote insuranceContract = insuranceContracts[
             insuranceContractAddress
         ].insuranceContract;
