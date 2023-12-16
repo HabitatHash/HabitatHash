@@ -57,13 +57,6 @@ contract HabitatHub {
         uint256 _value
     );
 
-    //Get the Rental Contract object from contract address
-    function getRentalContract(
-        address contractAddress
-    ) public view returns (RentalContract memory) {
-        return rentalContracts[contractAddress];
-    }
-
     //Input USD to get rent in Wei.
     function getUsdToWei(uint value) public view returns (uint) {
         uint ethToUsd = getEthToUsd();
@@ -151,21 +144,15 @@ contract HabitatHub {
             "You can only remove your own objects"
         );
 
-        removeId(objectId);
-
-        emit RemoveObject(msg.sender, objectId);
-    }
-
-    //Removes an Id from the objectIds
-    function removeId(uint256 id) private {
         //Replaces the element to be removed with the last element, and then removes the last element
         for (uint256 i = 0; i < objectIds.length; i++) {
-            if (objectIds[i] == id) {
+            if (objectIds[i] == objectId) {
                 objectIds[i] = objectIds[objectIds.length - 1];
                 objectIds.pop();
-                return;
             }
         }
+
+        emit RemoveObject(msg.sender, objectId);
     }
 
     //Start the renting process, creates a housingRentalContract
@@ -266,6 +253,12 @@ contract HabitatHub {
         address insuranceContractAddress = rentalContracts[
             rentalContractAddress
         ].insuranceContract;
+
+        require(
+            insuranceContractAddress != address(0),
+            "No insurance claim on this contract"
+        );
+
         HabitatVote insuranceContract = insuranceContracts[
             insuranceContractAddress
         ].insuranceContract;
