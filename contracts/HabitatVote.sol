@@ -16,16 +16,14 @@ contract HabitatVote {
 
     //Owner of the contract
     address public owner;
+    //How many votes needed to close the case. Increase as application scales.
+    uint numberOfVotes = 5;
+    //Case details
+    InsuranceCase insuranceCase;
 
     // Keep track of the voters
     address[] public voters;
     mapping(address => Voter) public votes;
-
-    //How many votes needed to close the case. Increase as application scales.
-    uint numberOfVotes = 5;
-
-    //Initialize the contract with case details
-    InsuranceCase insuranceCase;
 
     constructor(
         address contractOwner,
@@ -36,6 +34,9 @@ contract HabitatVote {
         owner = contractOwner;
         insuranceCase = InsuranceCase(relatedTo, description, value);
     }
+
+    event voted(address indexed _user, bool vote);
+    event votingFinished(bool result);
 
     //Get the details of the case
     function getCase() public view returns (InsuranceCase memory) {
@@ -51,6 +52,11 @@ contract HabitatVote {
         votes[msg.sender].voted = true;
         voters.push(msg.sender);
         votes[msg.sender].vote = value;
+
+        emit voted(msg.sender, value);
+        if (voters.length == numberOfVotes) {
+            emit votingFinished(getResult());
+        }
     }
 
     //See what a specific address voted
