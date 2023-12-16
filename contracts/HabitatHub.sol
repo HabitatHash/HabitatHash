@@ -57,13 +57,6 @@ contract HabitatHub {
         uint256 _value
     );
 
-    //Get the Rental Contract object from contract address
-    function getRentalContract(
-        address contractAddress
-    ) public view returns (RentalContract memory) {
-        return rentalContracts[contractAddress];
-    }
-
     //Input USD to get rent in Wei.
     function getUsdToWei(uint value) public view returns (uint) {
         uint ethToUsd = getEthToUsd();
