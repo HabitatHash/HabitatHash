@@ -49,7 +49,13 @@ contract HabitatHub {
     event RemoveObject(address indexed _landlord, uint256 _objectId);
     event Rent(address indexed _renter, uint256 _objectId);
     event EndRent(address indexed _renter, uint256 _objectId);
-    event InsuranceClaimed(address indexed _user, uint256 value);
+    event InsuranceClaimed(address indexed _user, uint256 _value);
+    event InsuranceApplied(
+        address indexed _user,
+        address indexed rentalContract,
+        string _description,
+        uint256 _value
+    );
 
     function getUsdToEth(uint value) public view returns (uint) {
         uint ethToUsd = getEthToUsd();
@@ -237,6 +243,12 @@ contract HabitatHub {
         insuranceContracts[address(insuranceContract)] = InsuranceContract(
             insuranceContract,
             false
+        );
+        emit InsuranceApplied(
+            msg.sender,
+            rentalContractAddress,
+            description,
+            value
         );
     }
 
