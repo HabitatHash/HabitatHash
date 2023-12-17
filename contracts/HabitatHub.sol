@@ -18,10 +18,12 @@ contract HabitatHub {
         bool isRented; // is apartment rented out
         address contractAddress; // address to the current active contract
     }
+    // RentalContract holds the Rent contract, and address to insurance contract if applied for insurance
     struct RentalContract {
         HabitatRent rentalContract;
         address insuranceContract;
     }
+    // InsuranceContract holds the Vote contract, and a bool to see if money has been claimed
     struct InsuranceContract {
         HabitatVote insuranceContract;
         bool hasClaimed;
