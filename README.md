@@ -63,6 +63,18 @@ Start the server
   npx hardhat test
 ```
 
+## Deploy locally
+
+Create and run a Sepolia fork network
+
+```bash
+npx hardhat node
+```
+
+```bash
+npx hardhat run --network localhost scripts/deploy.js
+```
+
 ## Code coverage
 
 To get a coverage report run
