@@ -25,6 +25,10 @@ Our objectives are to enable users to:
 └── README.md
 ```
 
+## Pre-Requisites
+
+You need ```Node.js``` >=16.0 in order to run this project.
+
 ## Run Tests Locally
 
 Clone the project
