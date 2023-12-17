@@ -99,7 +99,10 @@ We want to thank our professors [Martin Monperrus](http://www.monperrus.net/mart
 ## Closely related work
 
 [RentPeacefully](https://rentpeacefully.com/)
+Blockchain based platform which enables Landlord to list properties for rent (Unreleased, seems to be abandoned)
+
 [Smart Lease Contract](https://github.com/djokicx/smart-lease-contract)
+A (small and abandoned) smart lease contract hosted on Ethereum
 
 ## Appendix
 
