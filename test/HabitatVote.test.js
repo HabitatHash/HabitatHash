@@ -7,8 +7,21 @@ const zeroAddress = '0x0000000000000000000000000000000000000000';
 
 describe('HabitatVote', async function () {
   async function deployContractFixture() {
-    const [addr1, addr2, addr3, addr4, addr5, addr6, addr7] =
-      await ethers.getSigners();
+    const [
+      addr1,
+      addr2,
+      addr3,
+      addr4,
+      addr5,
+      addr6,
+      addr7,
+      addr8,
+      addr9,
+      addr10,
+      addr11,
+      addr12,
+      addr13,
+    ] = await ethers.getSigners();
 
     const contract = await ethers.deployContract('HabitatVote', [
       addr1,
@@ -17,7 +30,22 @@ describe('HabitatVote', async function () {
       100,
     ]);
 
-    return { contract, addr1, addr2, addr3, addr4, addr5, addr6, addr7 };
+    return {
+      contract,
+      addr1,
+      addr2,
+      addr3,
+      addr4,
+      addr5,
+      addr6,
+      addr7,
+      addr8,
+      addr9,
+      addr10,
+      addr11,
+      addr12,
+      addr13,
+    };
   }
   it('Deployment should set correct information', async function () {
     const { contract, addr1 } = await loadFixture(deployContractFixture);
@@ -68,43 +96,96 @@ describe('HabitatVote', async function () {
     await expect(contract.getResult()).to.be.revertedWith('Voting is not over');
   });
   it('Should not be able to vote when voting is done', async function () {
-    const { contract, addr2, addr3, addr4, addr5, addr6, addr7 } =
-      await loadFixture(deployContractFixture);
+    const {
+      contract,
+      addr2,
+      addr3,
+      addr4,
+      addr5,
+      addr6,
+      addr7,
+      addr8,
+      addr9,
+      addr10,
+      addr11,
+      addr12,
+      addr13,
+    } = await loadFixture(deployContractFixture);
 
     await contract.connect(addr2).vote(true);
     await contract.connect(addr3).vote(true);
     await contract.connect(addr4).vote(true);
     await contract.connect(addr5).vote(true);
     await contract.connect(addr6).vote(true);
+    await contract.connect(addr7).vote(false);
+    await contract.connect(addr8).vote(false);
+    await contract.connect(addr9).vote(false);
+    await contract.connect(addr10).vote(true);
+    await contract.connect(addr11).vote(true);
+    await contract.connect(addr12).vote(false);
 
-    await expect(contract.connect(addr7).vote(true)).to.be.revertedWith(
+    await expect(contract.connect(addr13).vote(true)).to.be.revertedWith(
       'The voting is over'
     );
   });
   it('You should be able to get result (true) when voting is done', async function () {
-    const { contract, addr2, addr3, addr4, addr5, addr6 } = await loadFixture(
-      deployContractFixture
-    );
+    const {
+      contract,
+      addr2,
+      addr3,
+      addr4,
+      addr5,
+      addr6,
+      addr7,
+      addr8,
+      addr9,
+      addr10,
+      addr11,
+      addr12,
+    } = await loadFixture(deployContractFixture);
 
     await contract.connect(addr2).vote(true);
     await contract.connect(addr3).vote(true);
     await contract.connect(addr4).vote(true);
     await contract.connect(addr5).vote(true);
     await contract.connect(addr6).vote(true);
+    await contract.connect(addr7).vote(false);
+    await contract.connect(addr8).vote(false);
+    await contract.connect(addr9).vote(false);
+    await contract.connect(addr10).vote(true);
+    await contract.connect(addr11).vote(true);
+    await contract.connect(addr12).vote(false);
 
     const result = await contract.getResult();
     expect(result).to.equal(true);
   });
   it('You should be able to get result (false) when voting is done', async function () {
-    const { contract, addr2, addr3, addr4, addr5, addr6 } = await loadFixture(
-      deployContractFixture
-    );
+    const {
+      contract,
+      addr2,
+      addr3,
+      addr4,
+      addr5,
+      addr6,
+      addr7,
+      addr8,
+      addr9,
+      addr10,
+      addr11,
+      addr12,
+    } = await loadFixture(deployContractFixture);
 
     await contract.connect(addr2).vote(false);
     await contract.connect(addr3).vote(false);
     await contract.connect(addr4).vote(false);
     await contract.connect(addr5).vote(true);
     await contract.connect(addr6).vote(true);
+    await contract.connect(addr7).vote(false);
+    await contract.connect(addr8).vote(false);
+    await contract.connect(addr9).vote(false);
+    await contract.connect(addr10).vote(true);
+    await contract.connect(addr11).vote(true);
+    await contract.connect(addr12).vote(false);
 
     const result = await contract.getResult();
     expect(result).to.equal(false);
