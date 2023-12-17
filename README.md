@@ -18,7 +18,8 @@ Our objectives are to enable users to:
 ├── contracts                   
 │     ├── HabitatHub.sol          // Hub contract for all rental objects
 │     ├── HabitatRent.sol         // Contract for each renting object
-│     └── HabitatVote.sol         // Contract for voting insurance claims                                 
+│     └── HabitatVote.sol         // Contract for voting insurance claims
+├── scripts                       // Folder containing scripts to interact with the contracts                           
 ├── test                  
 │     ├── HabitatHub.test.js      
 │     ├── HabitatRent.test.js
