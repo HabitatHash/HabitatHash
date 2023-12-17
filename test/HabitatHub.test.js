@@ -5,12 +5,38 @@ const {
 
 describe('HabitatHub', async function () {
   async function deployContractFixture() {
-    const [addr1, addr2, addr3, addr4, addr5, addr6] =
-      await ethers.getSigners();
+    const [
+      addr1,
+      addr2,
+      addr3,
+      addr4,
+      addr5,
+      addr6,
+      addr7,
+      addr8,
+      addr9,
+      addr10,
+      addr11,
+      addr12,
+    ] = await ethers.getSigners();
 
     const contract = await ethers.deployContract('HabitatHub');
 
-    return { contract, addr1, addr2, addr3, addr4, addr5, addr6 };
+    return {
+      contract,
+      addr1,
+      addr2,
+      addr3,
+      addr4,
+      addr5,
+      addr6,
+      addr7,
+      addr8,
+      addr9,
+      addr10,
+      addr11,
+      addr12,
+    };
   }
 
   //Test correct deployment
@@ -342,8 +368,21 @@ describe('HabitatHub', async function () {
     ).to.be.revertedWith('You dont own that contract');
   });
   it('Should not be able to claim insurance when voted false', async function () {
-    const { contract, addr1, addr2, addr3, addr4, addr5, addr6 } =
-      await loadFixture(deployContractFixture);
+    const {
+      contract,
+      addr1,
+      addr2,
+      addr3,
+      addr4,
+      addr5,
+      addr6,
+      addr7,
+      addr8,
+      addr9,
+      addr10,
+      addr11,
+      addr12,
+    } = await loadFixture(deployContractFixture);
 
     await contract
       .connect(addr1)
@@ -375,14 +414,33 @@ describe('HabitatHub', async function () {
     await HabitatVoteInstance.connect(addr4).vote(false);
     await HabitatVoteInstance.connect(addr5).vote(true);
     await HabitatVoteInstance.connect(addr6).vote(false);
+    await HabitatVoteInstance.connect(addr7).vote(false);
+    await HabitatVoteInstance.connect(addr8).vote(false);
+    await HabitatVoteInstance.connect(addr9).vote(false);
+    await HabitatVoteInstance.connect(addr10).vote(false);
+    await HabitatVoteInstance.connect(addr11).vote(false);
+    await HabitatVoteInstance.connect(addr12).vote(false);
 
     await expect(
       contract.connect(addr1).claimInsurance(rentalContractAddress)
     ).to.be.revertedWith('It has been voted you should not get insurance');
   });
   it('Should be able to claim insurance when voted true', async function () {
-    const { contract, addr1, addr2, addr3, addr4, addr5, addr6 } =
-      await loadFixture(deployContractFixture);
+    const {
+      contract,
+      addr1,
+      addr2,
+      addr3,
+      addr4,
+      addr5,
+      addr6,
+      addr7,
+      addr8,
+      addr9,
+      addr10,
+      addr11,
+      addr12,
+    } = await loadFixture(deployContractFixture);
 
     await contract
       .connect(addr1)
@@ -414,14 +472,33 @@ describe('HabitatHub', async function () {
     await HabitatVoteInstance.connect(addr4).vote(false);
     await HabitatVoteInstance.connect(addr5).vote(true);
     await HabitatVoteInstance.connect(addr6).vote(false);
+    await HabitatVoteInstance.connect(addr7).vote(true);
+    await HabitatVoteInstance.connect(addr8).vote(true);
+    await HabitatVoteInstance.connect(addr9).vote(true);
+    await HabitatVoteInstance.connect(addr10).vote(false);
+    await HabitatVoteInstance.connect(addr11).vote(false);
+    await HabitatVoteInstance.connect(addr12).vote(false);
 
     await expect(
       contract.connect(addr1).claimInsurance(rentalContractAddress)
     ).to.emit(contract, 'InsuranceClaimed');
   });
   it('Should not be able to claim insurance when blanace in contract is not enough', async function () {
-    const { contract, addr1, addr2, addr3, addr4, addr5, addr6 } =
-      await loadFixture(deployContractFixture);
+    const {
+      contract,
+      addr1,
+      addr2,
+      addr3,
+      addr4,
+      addr5,
+      addr6,
+      addr7,
+      addr8,
+      addr9,
+      addr10,
+      addr11,
+      addr12,
+    } = await loadFixture(deployContractFixture);
 
     await contract
       .connect(addr1)
@@ -453,14 +530,33 @@ describe('HabitatHub', async function () {
     await HabitatVoteInstance.connect(addr4).vote(false);
     await HabitatVoteInstance.connect(addr5).vote(true);
     await HabitatVoteInstance.connect(addr6).vote(false);
+    await HabitatVoteInstance.connect(addr7).vote(true);
+    await HabitatVoteInstance.connect(addr8).vote(true);
+    await HabitatVoteInstance.connect(addr9).vote(true);
+    await HabitatVoteInstance.connect(addr10).vote(false);
+    await HabitatVoteInstance.connect(addr11).vote(false);
+    await HabitatVoteInstance.connect(addr12).vote(false);
 
     await expect(
       contract.connect(addr1).claimInsurance(rentalContractAddress)
     ).to.be.revertedWith('Insufficient balance in the contract');
   });
   it('Should not be able to claim insurance twice', async function () {
-    const { contract, addr1, addr2, addr3, addr4, addr5, addr6 } =
-      await loadFixture(deployContractFixture);
+    const {
+      contract,
+      addr1,
+      addr2,
+      addr3,
+      addr4,
+      addr5,
+      addr6,
+      addr7,
+      addr8,
+      addr9,
+      addr10,
+      addr11,
+      addr12,
+    } = await loadFixture(deployContractFixture);
 
     await contract
       .connect(addr1)
@@ -492,6 +588,12 @@ describe('HabitatHub', async function () {
     await HabitatVoteInstance.connect(addr4).vote(false);
     await HabitatVoteInstance.connect(addr5).vote(true);
     await HabitatVoteInstance.connect(addr6).vote(false);
+    await HabitatVoteInstance.connect(addr7).vote(true);
+    await HabitatVoteInstance.connect(addr8).vote(true);
+    await HabitatVoteInstance.connect(addr9).vote(true);
+    await HabitatVoteInstance.connect(addr10).vote(false);
+    await HabitatVoteInstance.connect(addr11).vote(false);
+    await HabitatVoteInstance.connect(addr12).vote(false);
 
     await contract.connect(addr1).claimInsurance(rentalContractAddress);
 
