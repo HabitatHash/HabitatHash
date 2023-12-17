@@ -23,13 +23,6 @@ describe('HabitatHub', async function () {
   });
 
   //Test usd to eth oracle
-  it('Should return the latest price', async function () {
-    const { contract, addr1 } = await loadFixture(deployContractFixture);
-
-    const latestPrice = await contract.connect(addr1).getEthToUsd();
-
-    expect(Number(latestPrice)).to.be.a('number');
-  });
   it('Should be able to get usdToEth', async function () {
     const { contract } = await loadFixture(deployContractFixture);
 

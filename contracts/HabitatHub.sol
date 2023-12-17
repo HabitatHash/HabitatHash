@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
-import "hardhat/console.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "./HabitatVote.sol";
 import "./HabitatRent.sol";
@@ -38,11 +37,7 @@ contract HabitatHub {
     //Mappings to store all rental objects and contracts
     mapping(uint256 => RentalObject) public rentalObjects;
     mapping(address => RentalContract) public rentalContracts;
-
-    //Mappings to keep track of paid and claimed insurance
     mapping(address => InsuranceContract) public insuranceContracts;
-    mapping(address => uint256) public claimedInsurance;
-    mapping(address => uint256) public paidInsurance;
 
     // Events helps off-chain applications understand what happens within your contract.
     event AddObject(address indexed _landlord, uint256 _objectId);
@@ -59,21 +54,13 @@ contract HabitatHub {
 
     //Input USD to get rent in Wei.
     function getUsdToWei(uint value) public view returns (uint) {
-        uint ethToUsd = getEthToUsd();
-        //ethToUsd has 8 decimals, adding 26 (18+8) decimals to value to get Wei.
-        return (value * (10 ** 26)) / ethToUsd;
-    }
-
-    //Gets current price of 1 eth in USD (Contains 8 decimals)
-    function getEthToUsd() public view returns (uint) {
         (, int price, , , ) = priceFeed.latestRoundData();
-        return uint(price);
+        //priceFeed has 8 decimals, adding 26 (18+8) decimals to value to get Wei.
+        return (value * (10 ** 26)) / uint(price);
     }
 
     // The contract should be able to recieve payments to keep as an insurance pool
-    function deposit() external payable {
-        paidInsurance[msg.sender] += msg.value;
-    }
+    function deposit() external payable {}
 
     //Get all object ids
     function getAllObjectIds() public view returns (uint256[] memory) {
@@ -109,7 +96,8 @@ contract HabitatHub {
         uint256 sqm,
         bool isFurnished
     ) public {
-        uint256 objectId = addressToHashId(objectAddress);
+        //Hashes the address to a uint to be used as a key in mapper
+        uint256 objectId = uint256(keccak256(abi.encodePacked(objectAddress)));
 
         require(
             !idExists(objectId),
@@ -286,17 +274,9 @@ contract HabitatHub {
         );
 
         insuranceContracts[insuranceContractAddress].hasClaimed = true;
-        claimedInsurance[msg.sender] += insuranceAmount;
         payable(msg.sender).transfer(insuranceAmount);
 
         emit InsuranceClaimed(msg.sender, insuranceAmount);
-    }
-
-    //Hashes the address to a uint to be used as a key in mapper
-    function addressToHashId(
-        string memory input
-    ) private pure returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(input)));
     }
 
     //Checks if a given id exists
