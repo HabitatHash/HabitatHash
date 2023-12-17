@@ -17,7 +17,7 @@ contract HabitatVote {
     //Owner of the contract
     address public owner;
     //How many votes needed to close the case. Increase as application scales.
-    uint numberOfVotes = 5;
+    uint numberOfVotes = 11;
     //Case details
     InsuranceCase insuranceCase;
 

@@ -220,7 +220,7 @@ contract HabitatHub {
             msg.sender,
             rentalContractAddress,
             description,
-            value
+            getUsdToWei(value)
         );
 
         rentalContracts[rentalContractAddress].insuranceContract = address(
